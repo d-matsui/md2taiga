@@ -7,13 +7,25 @@
 
 {% block content %}
   <form method="post">
-    <label for="project">Project Name</label>
-    <input name="project" id="project" value={{ request.form['project'] or '' }}>
-    <label for="text">Markdown Text</label>
-    <textarea name="text" id="text">{{ request.form['text'] or '' }}</textarea>
-    <input type="submit" value="Submit">
-  </form>
+    <label for="project_name">Project Name</label>
+    <input name="project_name" id="project_name" value="{{ request.form['project_name'] or '' }}" required>
 
-  <label for="prompt">Prompt</label>
-  <textarea readonly name="prompt" id="prompt">{{ request.form['prompt'] or '' }}</textarea>
+    <label for="text">Markdown Text</label>
+    <textarea name="text" id="text" required>{{ request.form['text'] or '' }}</textarea>
+    <input type="submit" value="Submit">
+
+    <p>User Stories to Create</p>
+    {# <textarea readonly name="userstories" id="userstories">{{ userstories }}</textarea> #}
+    {% for us in userstories %}
+      <div>
+        {{ us['title'] }}
+        <div>
+        {% for task in us['task_list'] %}
+          <li>{{ task['title'] }}</li>
+        {% endfor %}
+        <div>
+      </div>
+    {% endfor %}
+    <input type="submit" name="add_us" value="Add User Stories">
+  </form>
 {% endblock %}

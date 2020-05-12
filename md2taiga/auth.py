@@ -67,6 +67,7 @@ def login():
         if error is None:
             session.clear()
             session['user_id'] = user['id']
+            # TODO: Should add taiga api object into g or session
             return redirect(url_for('editing.create'))
 
         flash(error)
