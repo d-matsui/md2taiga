@@ -26,11 +26,11 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    # from . import editing
-    # app.register_blueprint(editing.bp)
-
     from . import auth
     app.register_blueprint(auth.bp)
     app.add_url_rule('/', endpoint='index')
+
+    from . import editing
+    app.register_blueprint(editing.bp)
 
     return app
