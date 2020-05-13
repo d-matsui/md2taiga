@@ -1,0 +1,46 @@
+<!doctype html>
+<title>Markdown to Taiga</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+  const eraseText = () => {
+    document.getElementById('text').value = '';
+  }
+</script>
+
+<form method="post">
+  <div class="row">
+    <div class="column">
+      <p>Username</p>
+      <input name="username" id="username" value="{{ request.form['username'] or '' }}" required>
+    </div>
+    <div class="column">
+      <p>Password</p>
+      <input type="password" name="password" id="password" value="{{ request.form['password'] or '' }}" required>
+    </div>
+    <div class="column">
+      <p>Hostname</p>
+      <input name="hostname" id="hostname" value="{{ request.form['hostname'] or ''  }}" required>
+    </div>
+    <div class="column">
+      <p>Project Name</p>
+      <input name="project_name" id="project_name" value="{{ request.form['project_name'] or '' }}" required>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <p>Markdown Text</p>
+      <textarea name="text" id="text" required>{{ text }}</textarea>
+      <br>
+      <input type="submit" value="Convert">
+      <input type="button" value="Clear" onclick="javascript:eraseText();">
+    </div>
+
+    <div class="column">
+      <p>User Stories to Create</p>
+      <textarea name="text_converted" id="text_converted">{{ text_converted }}</textarea>
+      <input type="submit" name="create" value="Create User Stories">
+    </div>
+  </div>
+</form>

@@ -1,46 +1,60 @@
 from flask import (
-    Blueprint, flash, g, render_template, request, session
+    Blueprint, flash, redirect, render_template, request, url_for
 )
-from md2taiga.auth import login_required
 
 # TODO: Should use md2taiga_cli module
 import re
 from taiga import TaigaAPI
 from collections import deque, defaultdict
 
-bp = Blueprint('editing', __name__, url_prefix='/editing')
+bp = Blueprint('index', __name__)
 
 
-@bp.route('/create', methods=('GET', 'POST'))
-@login_required
-def create():
+@bp.route('/', methods=('GET', 'POST'))
+def index():
     if request.method == 'POST':
-        text = request.form['text']
+        username = request.form['username']
+        password = request.form['password']
+        hostname = request.form['hostname']
         project_name = request.form['project_name']
+        text = request.form['text']
+
         error = None
 
-        if not project_name:
+        if not username:
+            error = 'Username is required.'
+        elif not password:
+            error = 'Password is required.'
+        elif not hostname:
+            error = 'Hostname is required.'
+        elif not project_name:
             error = 'Project name is required.'
         elif not text:
             error = 'Markdown text is required.'
 
-        if error is not None:
-            flash(error)
-        else:
+        if error is None:
             # TODO: Should use md2taiga_cli module
-            # FIXME: Must not hardcode password
-            api = init_taiga_api(g.user['hostname'], g.user['username'], '')
+            api = init_taiga_api(hostname, username, password)
             project = api.projects.get_by_slug(project_name)
             lines = text.splitlines()
             level = calc_min_level(lines)
             userstories = create_us_list(lines, level, project)
+            text_converted = ''
+            for us in userstories:
+                line = f'- {us["title"]}\n'
+                text_converted += line
+                for task in us['task_list']:
+                    line = f'\t- {task["title"]}\n'
+                    text_converted += line
             # TODO: Need to simplify this
-            if 'add_us' in request.form:
+            if 'create' in request.form:
                 add_us_to_project(userstories, project)
-                return render_template('editing/create.html')
-            return render_template('editing/create.html', project_name=project_name, text=text, userstories=userstories)
+                return render_template('index.html')
+            return render_template('index.html', username=username, password=password, hostname=hostname, project_name=project_name, text=text, text_converted=text_converted, userstories=userstories)
 
-    return render_template('editing/create.html')
+        flash(error)
+
+    return render_template('index.html')
 
 
 def init_taiga_api(host, username, password):
