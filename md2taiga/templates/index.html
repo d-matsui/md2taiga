@@ -33,14 +33,13 @@
       <p>Markdown Text</p>
       <textarea name="text" id="text" required>{{ text }}</textarea>
       <br>
-      <input type="submit" value="Convert">
-      <input type="button" value="Clear" onclick="javascript:eraseText();">
+      <input type="submit" value="Convert" class="btn"><input type="button" value="Clear" class="btn btn-clear" onclick="javascript:eraseText();">
     </div>
 
     <div class="column">
       <p>User Stories to Create</p>
-      <textarea name="text_converted" id="text_converted">{{ text_converted }}</textarea>
-      <input type="submit" name="create" value="Create User Stories">
+      <textarea name="text_converted" id="text_converted" readonly>{{ text_converted }}</textarea>
+      <input type="submit" name="create" class="btn" value="Create User Stories">
     </div>
   </div>
 </form>
