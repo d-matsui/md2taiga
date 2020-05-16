@@ -91,7 +91,7 @@ def get_linums(lines, target_level):
 
 def create_us_list(lines, level, project):
     us_list = []
-    status_name = 'New'
+    status_name = '着手可能'
     status = project.us_statuses.get(name=status_name).id
     tag_name = 'team: dev'
     tags = {tag_name: project.list_tags()[tag_name]}
@@ -110,7 +110,7 @@ def create_us_list(lines, level, project):
             us['exists'] = False
             us['status'] = status
             us['tags'] = tags
-        match_obj = re.search(r'[\d+pt]', us['title'])
+        match_obj = re.search(r'\[\d+pt\]', us['title'])
         if match_obj:
             point_name = match_obj.group().strip('[pt]')
         else:
