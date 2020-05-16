@@ -100,8 +100,16 @@ def create_us_list(lines, level, project):
     for idx, linum in enumerate(linums_us):
         us = defaultdict()
         us['title'] = lines[linum].strip('#').strip()
-        us['status'] = status
-        us['tags'] = tags
+        if us['title'].startswith('#'):
+            # the userstory already exists
+            us['exists'] = True
+            match_obj = re.match(r'#\d+', us['title'])
+            us['id'] = match_obj.group().strip('#')
+            us['title'] = us['title'][match_obj.end():].strip()
+        else:
+            us['exists'] = False
+            us['status'] = status
+            us['tags'] = tags
         linum_next = linums_us[idx + 1] if not idx == len(linums_us) - 1 else -1
         lines_descoped = lines[linum:linum_next]
         us['task_list'] = create_task_list(lines_descoped, level + 1)
@@ -116,14 +124,18 @@ def create_task_list(lines, level):
         task = defaultdict()
         task['title'] = lines[linum].strip('#').strip()
         linum_next = linums_task[idx+1] if not idx == len(linums_task) - 1 else -1
-        task['desc'] = ''.join(lines[linum + 1:linum_next])
+        task['desc'] = '\n'.join(lines[linum + 1:linum_next])
         task_list.append(task)
     return task_list
 
 
 def add_us_to_project(us_list, project):
     for us in us_list:
-        us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
+        if us['exists']:
+            # TODO: Should handle error
+            us_obj = project.get_userstory_by_ref(us['id'])
+        else:
+            us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
         for task in us['task_list']:
             us_obj.add_task(
                 task['title'],
