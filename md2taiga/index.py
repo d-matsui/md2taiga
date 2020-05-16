@@ -110,6 +110,13 @@ def create_us_list(lines, level, project):
             us['exists'] = False
             us['status'] = status
             us['tags'] = tags
+        match_obj = re.search(r'[\d+pt]', us['title'])
+        if match_obj:
+            point_name = match_obj.group().strip('[pt]')
+        else:
+            point_name = '?'
+        us['point'] = find_point_id(project, point_name)
+        # TODO: Should throw an error when the point is None
         linum_next = linums_us[idx + 1] if not idx == len(linums_us) - 1 else -1
         lines_descoped = lines[linum:linum_next]
         us['task_list'] = create_task_list(lines_descoped, level + 1)
@@ -135,12 +142,23 @@ def add_us_to_project(us_list, project):
             # TODO: Should handle error
             us_obj = project.get_userstory_by_ref(us['id'])
             us_obj.subject = us['title']
-            us_obj.update()
         else:
             us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
+        # FIXME: Should specify point to change
+        key = next(iter(us_obj.points))
+        us_obj.points[key] = us['point']
+        us_obj.update()
+
         for task in us['task_list']:
             us_obj.add_task(
                 task['title'],
                 project.task_statuses.get(name='New').id,
                 description=task['desc'],
             )
+
+
+def find_point_id(project, name):
+    for point in project.list_points():
+        if point.name == name:
+            return point.id
+    return None
