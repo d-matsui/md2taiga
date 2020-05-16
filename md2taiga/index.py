@@ -134,6 +134,8 @@ def add_us_to_project(us_list, project):
         if us['exists']:
             # TODO: Should handle error
             us_obj = project.get_userstory_by_ref(us['id'])
+            us_obj.subject = us['title']
+            us_obj.update()
         else:
             us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
         for task in us['task_list']:
