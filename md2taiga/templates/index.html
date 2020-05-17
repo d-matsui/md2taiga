@@ -11,35 +11,57 @@
 <form method="post">
   <div class="row">
     <div class="column">
-      <p>Username</p>
-      <input name="username" id="username" value="{{ request.form['username'] or '' }}" required>
+      <label for="username">User Name</label>
+      <input type="text" name="username" id="username" placeholder="Your user name for taiga" value="{{ request.form['username'] or '' }}" required>
     </div>
     <div class="column">
-      <p>Password</p>
-      <input type="password" name="password" id="password" value="{{ request.form['password'] or '' }}" required>
-    </div>
-    <div class="column">
-      <p>Hostname</p>
-      <input name="hostname" id="hostname" value="{{ request.form['hostname'] or ''  }}" required>
-    </div>
-    <div class="column">
-      <p>Project Name</p>
-      <input name="project_name" id="project_name" value="{{ request.form['project_name'] or '' }}" required>
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" placeholder="Password" value="{{ request.form['password'] or '' }}" required>
     </div>
   </div>
 
   <div class="row">
     <div class="column">
-      <p>Markdown Text</p>
-      <textarea name="text" id="text" required>{{ text }}</textarea>
-      <br>
-      <input type="submit" value="Convert" class="btn"><input type="button" value="Clear" class="btn btn-clear" onclick="javascript:eraseText();">
+      <label for="hostname">Hostname</label>
+      <input type="text" name="hostname" id="hostname" placeholder="URL for your taiga (e.g. https://taiga.example.com)" value="{{ request.form['hostname'] or ''  }}" required>
+    </div>
+    <div class="column">
+      <label for="project_name">Project Name</label>
+      <input type="text" name="project_name" id="project_name" placeholder="Project name" value="{{ request.form['project_name'] or '' }}" required>
+    </div>
+  </div>
+</div>
+
+  <div class="row">
+    <div class="column">
+      <div class="title">
+        <span>Markdown Text</span>
+      </div>
+      <div class="text">
+        <textarea name="text" id="text" required>{{ text }}</textarea>
+      </div>
+      <div class="row">
+        <div class="column">
+          <input type="submit" value="Convert" class="btn-square">
+        </div>
+        <div class="column">
+          <input type="button" value="Clear" class="btn-square btn-clear" onclick="javascript:eraseText();">
+        </div>
+      </div>
     </div>
 
     <div class="column">
-      <p>User Stories to Create</p>
-      <textarea name="text_converted" id="text_converted" readonly>{{ text_converted }}</textarea>
-      <input type="submit" name="create" class="btn" value="Create User Stories">
+      <div class="title">
+        <span>User Stories with Tasks</span>
+      </div>
+      <div class="text_converted">
+        <textarea name="text_converted" id="text_converted" readonly>{{ text_converted }}</textarea>
+      </div>
+      <div class="row">
+        <div class="column">
+          <input type="submit" name="create" class="btn-square" value="Create">
+        </div>
+      </div>
     </div>
   </div>
 </form>
