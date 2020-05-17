@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
   const eraseText = () => {
-    document.getElementById('text').value = '';
+  document.getElementById('text').value = '';
   }
 </script>
 
@@ -30,8 +30,7 @@
       <input type="text" name="project_name" id="project_name" placeholder="Project name" value="{{ request.form['project_name'] or '' }}" required>
     </div>
   </div>
-</div>
-
+  <hr>
   <div class="row">
     <div class="column">
       <div class="title">
