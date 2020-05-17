@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, redirect, render_template, request, url_for
+    Blueprint, flash, render_template, request
 )
 
 # TODO: Should use md2taiga_cli module
@@ -7,11 +7,14 @@ import re
 from taiga import TaigaAPI
 from collections import deque, defaultdict
 
+import taiga.exceptions
+
 bp = Blueprint('index', __name__)
 
 
 @bp.route('/', methods=('GET', 'POST'))
 def index():
+    text = ''
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -20,7 +23,6 @@ def index():
         text = request.form['text']
 
         error = None
-
         if not username:
             error = 'Username is required.'
         elif not password:
@@ -31,6 +33,14 @@ def index():
             error = 'Project name is required.'
         elif not text:
             error = 'Markdown text is required.'
+        try:
+            api = init_taiga_api(hostname, username, password)
+            api.projects.get_by_slug(project_name)
+        except taiga.exceptions.TaigaRestException as e:
+            if str(e) == 'NETWORK ERROR':
+                error = 'Network Error. Check your hostname is correct.'
+            else:
+                error = str(e)
 
         if error is None:
             # TODO: Should use md2taiga_cli module
@@ -46,14 +56,14 @@ def index():
                 for task in us['task_list']:
                     line = f'\t- {task["title"]}\n'
                     text_converted += line
-            # TODO: Need to simplify this
             if 'create' in request.form:
                 add_us_to_project(userstories, project)
                 return render_template('index.html')
             return render_template('index.html', username=username, password=password, hostname=hostname, project_name=project_name, text=text, text_converted=text_converted, userstories=userstories)
 
         flash(error)
-
+    if text != '':
+        return render_template('index.html', text=text)
     return render_template('index.html')
 
 
