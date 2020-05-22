@@ -3,9 +3,9 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
- const eraseText = () => {
-     document.getElementById('text').value = '';
- }
+  const eraseText = () => {
+    document.getElementById('text').value = '';
+  }
 </script>
 
 {% for message in get_flashed_messages() %}
@@ -34,18 +34,42 @@
       <input type="text" name="project_name" id="project_name" placeholder="Project name" value="{{ request.form['project_name'] or '' }}" required>
     </div>
   </div>
+  {# <div class="left-align"> #}
+  {#   <input type="submit" name="auth" class="btn-auth" value="Authenticate"> #}
+  {# </div> #}
   <hr>
+  {# {% if status_list %} #}
+  {#   <div class="row"> #}
+  {#     {% for status in status_list %} #}
+  {#       <div class="column"> #}
+  {#         {\# <input type="checkbox" name="{{ status.name }}" value="{{ status.name }}" /> #\} #}
+  {#         <input type="button" class="btn-status" value="{{ status.name }}"> #}
+  {#       </div> #}
+  {#     {% endfor %} #}
+  {#   </div> #}
+  {# {% endif %} #}
+  {# <br> #}
+  {# {% if tag_list %} #}
+  {#   <div class="row"> #}
+  {#     {% for tag in tag_list %} #}
+  {#       <div class="column"> #}
+  {#         {\# <input type="checkbox" name="{{ tag }}" value="{{ tag }}" /> #\} #}
+  {#         <input type="button" value="{{ tag }}" class="btn-tag"> #}
+  {#       </div> #}
+  {#     {% endfor %} #}
+  {#   </div> #}
+  {# {% endif %} #}
   <div class="row">
     <div class="column">
       <div class="title">
         <span>Markdown Text</span>
       </div>
       <div class="text">
-        <textarea name="text" id="text" required>{{ text }}</textarea>
+        <textarea name="text" id="text">{{ text }}</textarea>
       </div>
       <div class="row">
         <div class="column">
-          <input type="submit" value="Convert" class="btn-square">
+          <input type="submit" name="convert" value="Convert" class="btn-square">
         </div>
         <div class="column">
           <input type="button" value="Clear" class="btn-square btn-clear" onclick="javascript:eraseText();">

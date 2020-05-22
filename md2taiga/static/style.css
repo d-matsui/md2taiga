@@ -32,6 +32,10 @@ input[type=text], input[type=password] {
     text-align: center;
 }
 
+.left-align {
+    text-align: left;
+}
+
 .flash {
     margin: 1em 0;
     padding: 1em;
@@ -56,8 +60,50 @@ textarea[id=text]:focus {
     border: solid 2px #333;
 }
 
+.btn-status, .btn-tag {
+    display: inline-block;
+    width: 85%;
+    text-align: left;
+    border: 2px solid #9ec34b;
+    font-size: 16px;
+    color: #9ec34b;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: .4s;
+}
+
+.btn-status:hover, .btn-tag:hover {
+    background-color: #9ec34b;
+    border-color: #cbe585;
+    color: #FFF;
+}
+
+.btn-status:active, .btn-tag:active {
+    background-color: #9ec34b;
+    border-color: #cbe585;
+    color: #FFF;
+}
+
 .btn-square {
     width: 85%;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+    padding: 0.5em 1em;
+    text-decoration: none;
+    border-bottom: solid 4px #627295;
+    border-radius: 3px;
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
+}
+
+.btn-auth {
+    width: 20%;
     background: #4CAF50;
     color: white;
     border: none;

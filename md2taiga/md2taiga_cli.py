@@ -48,12 +48,10 @@ def get_linums(lines, target_level):
     return linums
 
 
-def create_us_list(lines, level, project):
+def create_us_list(text, project, status, tags):
+    lines = text.splitlines()
+    level = calc_min_level(lines)
     us_list = []
-    status_name = 'New'
-    status = project.us_statuses.get(name=status_name).id
-    tag_name = 'team: dev'
-    tags = {tag_name: project.list_tags()[tag_name]}
 
     linums_us = get_linums(lines, level)
     for idx, linum in enumerate(linums_us):
@@ -67,8 +65,8 @@ def create_us_list(lines, level, project):
             us['title'] = us['title'][match_obj.end():].strip()
         else:
             us['exists'] = False
-            us['status'] = status
-            us['tags'] = tags
+        us['status'] = status
+        us['tags'] = tags
         match_obj = re.search(r'\[\d+pt\]', us['title'])
         if match_obj:
             point_name = match_obj.group().strip('[pt]')
@@ -101,6 +99,8 @@ def add_us_to_project(us_list, project):
             # TODO: Should handle error
             us_obj = project.get_userstory_by_ref(us['id'])
             us_obj.subject = us['title']
+            us_obj.status = us['status']
+            us_obj.tags = us['tags']
         else:
             us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
         # FIXME: Should specify point to change
@@ -121,6 +121,17 @@ def find_point_id(project, name):
         if point.name == name:
             return point.id
     return None
+
+
+def convert_text(userstories):
+    text_converted = ''
+    for us in userstories:
+        line = f'- {us["title"]}\n'
+        text_converted += line
+        for task in us['task_list']:
+            line = f'\t- {task["title"]}\n'
+            text_converted += line
+    return text_converted
 
 
 def main():
