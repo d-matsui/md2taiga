@@ -11,6 +11,8 @@ You can run this app in your local environment.
 ``` shell
 git clone git@github.com:d-matsui/md2taiga.git
 cd md2taiga
+python3 -m venv venv
+. venv/bin/activate
 pip install -r requirements.txt
 source ./export.sh
 flask run
