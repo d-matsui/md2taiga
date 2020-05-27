@@ -21,7 +21,8 @@ flask run
 ## Examples of markdown text
 
 You can add multiple subtasks for each user story.
-Note that the level of the user story is just one less than the level of the subtask.
+
+Note that the level of the user story must be just one less than the level of the subtask.
 
 ``` markdown
 # User Story Title
