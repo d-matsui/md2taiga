@@ -62,6 +62,7 @@ def create_us_list(text, project, status, tags):
             us['exists'] = True
             match_obj = re.match(r'#\d+', us['title'])
             us['id'] = match_obj.group().strip('#')
+            # exclude us number from the title
             us['title'] = us['title'][match_obj.end():].strip()
         else:
             us['exists'] = False
@@ -70,6 +71,8 @@ def create_us_list(text, project, status, tags):
         match_obj = re.search(r'\[\d+pt\]', us['title'])
         if match_obj:
             point_name = match_obj.group().strip('[pt]')
+            # exclude [Xpt] from the title
+            us['title'] = us['title'][:match_obj.start()].strip()
         else:
             point_name = '?'
         us['point'] = find_point_id(project, point_name)
