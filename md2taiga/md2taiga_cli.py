@@ -52,7 +52,8 @@ def create_us_list(text, project, status, tags):
     lines = text.splitlines()
     level = calc_min_level(lines)
     us_list = []
-
+    task_status = project.task_statuses.get(name='New')
+    point_dict = create_point_dict(project)
     linums_us = get_linums(lines, level)
     for idx, linum in enumerate(linums_us):
         us = defaultdict()
@@ -75,22 +76,23 @@ def create_us_list(text, project, status, tags):
             us['title'] = us['title'][:match_obj.start()].strip()
         else:
             point_name = '?'
-        us['point'] = find_point_id(project, point_name)
-        # TODO: Should throw an error when the point is None
+        # TODO: Should throw an error if there is no point specified
+        us['point'] = point_dict[point_name]
         linum_next = linums_us[idx + 1] if not idx == len(linums_us) - 1 else -1
         lines_descoped = lines[linum:linum_next]
-        us['task_list'] = create_task_list(lines_descoped, level + 1)
+        us['task_list'] = create_task_list(lines_descoped, level + 1, task_status)
         us_list.append(us)
     return us_list
 
 
-def create_task_list(lines, level):
+def create_task_list(lines, level, status):
     task_list = []
     linums_task = get_linums(lines, level)
     for idx, linum in enumerate(linums_task):
         task = defaultdict()
         task['title'] = lines[linum].strip('#').strip()
         linum_next = linums_task[idx+1] if not idx == len(linums_task) - 1 else -1
+        task['status'] = status.id
         task['desc'] = '\n'.join(lines[linum + 1:linum_next])
         task_list.append(task)
     return task_list
@@ -114,16 +116,16 @@ def add_us_to_project(us_list, project):
         for task in us['task_list']:
             us_obj.add_task(
                 task['title'],
-                project.task_statuses.get(name='New').id,
+                task['status'],
                 description=task['desc'],
             )
 
 
-def find_point_id(project, name):
+def create_point_dict(project):
+    point_dict = defaultdict()
     for point in project.list_points():
-        if point.name == name:
-            return point.id
-    return None
+        point_dict[point.name] = point.id
+    return point_dict
 
 
 def convert_text(userstories):
