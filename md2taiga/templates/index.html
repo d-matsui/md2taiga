@@ -34,6 +34,10 @@
       <label for="project_name">Project Name</label>
       <input type="text" name="project_name" id="project_name" placeholder="Project name" value="{{ request.form['project_name'] or '' }}" required>
     </div>
+    <div class="column">
+      <label for="milestone_name">Milestone Name</label>
+      <input type="text" name="milestone_name" id="milestone_name" placeholder="Milestone Name (e.g. Sprint1)" value="{{ request.form['milestone_name'] or '' }}">
+    </div>
   </div>
   {# <div class="left-align"> #}
   {#   <input type="submit" name="auth" class="btn-auth" value="Authenticate"> #}

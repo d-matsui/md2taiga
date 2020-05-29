@@ -48,9 +48,28 @@ def get_linums(lines, target_level):
     return linums
 
 
-def create_us_list(text, project, status, tags):
+def calc_commit_line(lines):
+    for linum, line in enumerate(lines):
+        if re.match(r'--- commit line ---', line, re.IGNORECASE):
+            return linum + 1
+    return len(lines)
+
+
+def get_milestone(project, milestone_name):
+    for milestone in project.list_milestones():
+        if milestone.name == milestone_name:
+            return milestone
+    return None
+
+
+def create_us_list(text, project, status, tags, milestone_name):
     lines = text.splitlines()
     level = calc_min_level(lines)
+    commit_line = calc_commit_line(lines)
+    milestone = None
+    if milestone_name != '':
+        # Should handle error
+        milestone = get_milestone(project, milestone_name)
     us_list = []
     task_status = project.task_statuses.get(name='New')
     point_dict = create_point_dict(project)
@@ -67,6 +86,10 @@ def create_us_list(text, project, status, tags):
             us['title'] = us['title'][match_obj.end():].strip()
         else:
             us['exists'] = False
+        if milestone is not None and commit_line > linum:
+            us['milestone'] = milestone.id
+        else:
+            us['milestone'] = None
         us['status'] = status
         us['tags'] = tags
         match_obj = re.search(r'\[\d+pt\]', us['title'])
@@ -106,8 +129,13 @@ def add_us_to_project(us_list, project):
             us_obj.subject = us['title']
             us_obj.status = us['status']
             us_obj.tags = us['tags']
+            if us['milestone'] is not None:
+                us_obj.milestone = us['milestone']
         else:
-            us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
+            if us['milestone'] is not None:
+                us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'], milestone=us['milestone'])
+            else:
+                us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
         # FIXME: Should specify point to change
         key = next(iter(us_obj.points))
         us_obj.points[key] = us['point']

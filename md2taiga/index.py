@@ -16,6 +16,7 @@ def index():
     password = request.form['password']
     hostname = request.form['hostname']
     project_name = request.form['project_name']
+    milestone_name = ''.join(request.form['milestone_name'].split())
     text = request.form['text']
     text_converted = request.form['text_converted']
 
@@ -34,10 +35,10 @@ def index():
         # TODO: Should be able to specify status and tag by GUI
         status_name = 'New'
         tag_name = 'team: dev'
-        # TODO: Handle error
+        # TODO: Should handle error
         status = project.us_statuses.get(name=status_name).id
         tags = {tag_name: project.list_tags()[tag_name]}
-        userstories = md2taiga_cli.create_us_list(text, project, status, tags)
+        userstories = md2taiga_cli.create_us_list(text, project, status, tags, milestone_name)
 
         if 'convert' in request.form:
             text_converted = md2taiga_cli.convert_text(userstories)

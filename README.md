@@ -4,7 +4,7 @@ A web application for creating user stories on Taiga.io from markdown text
 
 ## Getting Started
 
-[Go to the md2taiga where I'm hosting.](https://taiga-test-274314.an.r.appspot.com/)
+[Go to the md2taiga where I'm hosting.](https://md2taiga.dmti.net/)
 
 You can run this app in your local environment if you want.
 
