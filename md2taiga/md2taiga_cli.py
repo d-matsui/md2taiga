@@ -51,7 +51,7 @@ def get_linums(lines, target_level):
 def calc_commit_line(lines):
     for linum, line in enumerate(lines):
         if re.match(r'--- commit line ---', line, re.IGNORECASE):
-            return linum + 1
+            return linum
     return len(lines)
 
 
@@ -62,10 +62,12 @@ def get_milestone(project, milestone_name):
     return None
 
 
-def create_us_list(text, project, status, tags, milestone_name):
+def create_us_list(text, project, status_name, tag_name, milestone_name):
     lines = text.splitlines()
     level = calc_min_level(lines)
     commit_line = calc_commit_line(lines)
+    status = project.us_statuses.get(name=status_name)
+    tags = {tag_name: project.list_tags()[tag_name]}
     milestone = None
     if milestone_name != '':
         # Should handle error
@@ -77,6 +79,7 @@ def create_us_list(text, project, status, tags, milestone_name):
     for idx, linum in enumerate(linums_us):
         us = defaultdict()
         us['title'] = lines[linum].strip('#').strip()
+
         if us['title'].startswith('#'):
             # the userstory already exists
             us['exists'] = True
@@ -90,7 +93,7 @@ def create_us_list(text, project, status, tags, milestone_name):
             us['milestone'] = milestone.id
         else:
             us['milestone'] = None
-        us['status'] = status
+        us['status_id'] = status.id
         us['tags'] = tags
         match_obj = re.search(r'\[\d+pt\]', us['title'])
         if match_obj:
@@ -115,7 +118,7 @@ def create_task_list(lines, level, status):
         task = defaultdict()
         task['title'] = lines[linum].strip('#').strip()
         linum_next = linums_task[idx+1] if not idx == len(linums_task) - 1 else -1
-        task['status'] = status.id
+        task['status_id'] = status.id
         task['desc'] = '\n'.join(lines[linum + 1:linum_next])
         task_list.append(task)
     return task_list
@@ -127,15 +130,15 @@ def add_us_to_project(us_list, project):
             # TODO: Should handle error
             us_obj = project.get_userstory_by_ref(us['id'])
             us_obj.subject = us['title']
-            us_obj.status = us['status']
+            us_obj.status = us['status_id']
             us_obj.tags = us['tags']
             if us['milestone'] is not None:
                 us_obj.milestone = us['milestone']
         else:
             if us['milestone'] is not None:
-                us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'], milestone=us['milestone'])
+                us_obj = project.add_user_story(us['title'], status=us['status_id'], tags=us['tags'], milestone=us['milestone'])
             else:
-                us_obj = project.add_user_story(us['title'], status=us['status'], tags=us['tags'])
+                us_obj = project.add_user_story(us['title'], status=us['status_id'], tags=us['tags'])
         # FIXME: Should specify point to change
         key = next(iter(us_obj.points))
         us_obj.points[key] = us['point']
@@ -144,7 +147,7 @@ def add_us_to_project(us_list, project):
         for task in us['task_list']:
             us_obj.add_task(
                 task['title'],
-                task['status'],
+                task['status_id'],
                 description=task['desc'],
             )
 
@@ -176,9 +179,14 @@ def main():
     project = api.projects.get_by_slug(config.get('project_name'))
 
     filename = sys.argv[1]
-    lines = readfile_as_array(filename)
-    level_us = calc_min_level(lines)
-    us_list = create_us_list(lines, level_us, project)
+    text = readfile_as_array(filename)
+    status_name = 'New'
+    tag_name = 'team: dev'
+    milestone_name = ''
+    status = project.us_statuses.get(name=status_name).id
+    tags = {tag_name: project.list_tags()[tag_name]}
+
+    us_list = create_us_list(text, project, status, tags, milestone_name)
 
     add_us_to_project(us_list, project)
 

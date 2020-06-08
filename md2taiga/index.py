@@ -22,23 +22,22 @@ def index():
 
     error = validate_inputs(username, password, hostname, project_name, text, text_converted)
 
-    try:
-        api = md2taiga_cli.init_taiga_api(hostname, username, password)
-        project = api.projects.get_by_slug(project_name)
-    except taiga.exceptions.TaigaRestException as e:
-        if str(e) == 'NETWORK ERROR':
-            error = 'Network Error. Check your hostname is correct.'
-        else:
-            error = str(e)
+    if error is None:
+        try:
+            api = md2taiga_cli.init_taiga_api(hostname, username, password)
+            project = api.projects.get_by_slug(project_name)
+        except taiga.exceptions.TaigaRestException as e:
+            if str(e) == 'NETWORK ERROR':
+                error = 'Network Error. Check your hostname is correct.'
+            else:
+                error = str(e)
 
     if error is None:
         # TODO: Should be able to specify status and tag by GUI
         status_name = 'New'
         tag_name = 'team: dev'
         # TODO: Should handle error
-        status = project.us_statuses.get(name=status_name).id
-        tags = {tag_name: project.list_tags()[tag_name]}
-        userstories = md2taiga_cli.create_us_list(text, project, status, tags, milestone_name)
+        userstories = md2taiga_cli.create_us_list(text, project, status_name, tag_name, milestone_name)
 
         if 'convert' in request.form:
             text_converted = md2taiga_cli.convert_text(userstories)
