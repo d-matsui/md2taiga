@@ -1,0 +1,3 @@
+graft md2taiga/static
+graft md2taiga/templates
+global-exclude *.pyc
