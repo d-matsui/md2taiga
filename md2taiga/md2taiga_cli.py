@@ -106,21 +106,21 @@ def create_us_list(text, project, status_name, tag_name, milestone_name):
         us['point'] = point_dict[point_name]
         linum_next = linums_us[idx + 1] if not idx == len(linums_us) - 1 else -1
         lines_descoped = lines[linum:linum_next]
-        us['task_list'] = create_task_list(lines_descoped, level + 1, task_status)
+        us['task_list'] = create_task_list(lines_descoped, level + 1, task_status.id)
         us_list.append(us)
     return us_list
 
 
-def create_task_list(lines, level, status):
+def create_task_list(lines, level, status_id):
     task_list = []
     linums_task = get_linums(lines, level)
     for idx, linum in enumerate(linums_task):
         task = defaultdict()
         task['title'] = lines[linum].strip('#').strip()
-        linum_next = linums_task[idx+1] if not idx == len(linums_task) - 1 else -1
-        task['status_id'] = status.id
+        linum_next = linums_task[idx+1] if not idx == len(linums_task) - 1 else len(lines)
+        task['status_id'] = status_id
         task['desc'] = '\n'.join(lines[linum + 1:linum_next])
-        task_list.append(task)
+        task_list.append(dict(task))
     return task_list
 
 
