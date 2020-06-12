@@ -107,7 +107,7 @@ def create_us_list(text, project, status_name, tag_name, milestone_name):
         linum_next = linums_us[idx + 1] if not idx == len(linums_us) - 1 else -1
         lines_descoped = lines[linum:linum_next]
         us['task_list'] = create_task_list(lines_descoped, level + 1, task_status.id)
-        us_list.append(us)
+        us_list.append(dict(us))
     return us_list
 
 
@@ -159,9 +159,9 @@ def create_point_dict(project):
     return point_dict
 
 
-def convert_text(userstories):
+def convert_text(us_list):
     text_converted = ''
-    for us in userstories:
+    for us in us_list:
         line = f'- {us["title"]}\n'
         text_converted += line
         for task in us['task_list']:
@@ -170,26 +170,26 @@ def convert_text(userstories):
     return text_converted
 
 
-def main():
-    config_parser = ConfigParser()
-    config_parser.read('config.ini')
-    config = config_parser['default']
+# def main():
+#     config_parser = ConfigParser()
+#     config_parser.read('config.ini')
+#     config = config_parser['default']
 
-    api = init_taiga_api(config.get('host'), config.get('username'), config.get('password'))
-    project = api.projects.get_by_slug(config.get('project_name'))
+#     api = init_taiga_api(config.get('host'), config.get('username'), config.get('password'))
+#     project = api.projects.get_by_slug(config.get('project_name'))
 
-    filename = sys.argv[1]
-    text = readfile_as_array(filename)
-    status_name = 'New'
-    tag_name = 'team: dev'
-    milestone_name = ''
-    status = project.us_statuses.get(name=status_name).id
-    tags = {tag_name: project.list_tags()[tag_name]}
+#     filename = sys.argv[1]
+#     text = readfile_as_array(filename)
+#     status_name = 'New'
+#     tag_name = 'team: dev'
+#     milestone_name = ''
+#     status = project.us_statuses.get(name=status_name).id
+#     tags = {tag_name: project.list_tags()[tag_name]}
 
-    us_list = create_us_list(text, project, status, tags, milestone_name)
+#     us_list = create_us_list(text, project, status, tags, milestone_name)
 
-    add_us_to_project(us_list, project)
+#     add_us_to_project(us_list, project)
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
