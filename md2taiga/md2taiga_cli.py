@@ -113,7 +113,7 @@ def create_us(lines, line_num, line_num_next, milestone, us_status, tags, commit
     us['point_id'] = point_dict[point_name]
     role_name = next(iter(role_dict))
     # uncomment next line if you want to Specify role
-    role_name = 'DevOps'
+    # role_name = 'DevOps'
     us['role_id'] = role_dict[role_name]
 
     lines_clipped = lines[line_num:line_num_next]
