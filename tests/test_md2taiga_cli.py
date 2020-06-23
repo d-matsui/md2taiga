@@ -5,13 +5,13 @@ import taiga.exceptions
 from pprint import pprint
 
 
-def test_fails_init_taiga_api_with_no_host():
+def test_fails_setup_taiga_api_with_no_host():
     host = ''
     username = 'user'
     password = 'pass'
 
     with pytest.raises(taiga.exceptions.TaigaRestException) as e:
-        md2taiga_cli.init_taiga_api(host, username, password)
+        md2taiga_cli.setup_taiga_api(host, username, password)
     assert str(e.value) == 'NETWORK ERROR'
 
 
@@ -33,7 +33,7 @@ def test_calc_min_level():
     assert level == 3
 
 
-def test_get_linums():
+def test_get_line_numbers_by_level():
     lines = [
         '# US',
         '## Task',
@@ -42,12 +42,12 @@ def test_get_linums():
         '## Task',
         '### Description'
     ]
-    assert md2taiga_cli.get_linums(lines, 1) == deque([0, 3])
-    assert md2taiga_cli.get_linums(lines, 2) == deque([1, 4])
-    assert md2taiga_cli.get_linums(lines, 3) == deque([2, 5])
+    assert md2taiga_cli.get_line_numbers_by_level(lines, 1) == deque([0, 3])
+    assert md2taiga_cli.get_line_numbers_by_level(lines, 2) == deque([1, 4])
+    assert md2taiga_cli.get_line_numbers_by_level(lines, 3) == deque([2, 5])
 
 
-def test_calc_commit_line():
+def test_get_line_num_of_commit_line():
     lines = [
         '# US',
         '## Task',
@@ -57,7 +57,7 @@ def test_calc_commit_line():
         '## Task',
         '### Description'
     ]
-    assert md2taiga_cli.calc_commit_line(lines) == 3
+    assert md2taiga_cli.get_line_num_of_commit_line(lines) == 3
 
     lines = [
         '# US',
@@ -67,7 +67,7 @@ def test_calc_commit_line():
         '## Task',
         '### Description'
     ]
-    assert md2taiga_cli.calc_commit_line(lines) == len(lines)
+    assert md2taiga_cli.get_line_num_of_commit_line(lines) == len(lines)
 
 
 def test_create_task_list():

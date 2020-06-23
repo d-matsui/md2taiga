@@ -24,7 +24,7 @@ def index():
 
     if error is None:
         try:
-            api = md2taiga_cli.init_taiga_api(hostname, username, password)
+            api = md2taiga_cli.setup_taiga_api(hostname, username, password)
             project = api.projects.get_by_slug(project_name)
         except taiga.exceptions.TaigaRestException as e:
             if str(e) == 'NETWORK ERROR':

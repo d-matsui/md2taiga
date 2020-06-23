@@ -9,5 +9,6 @@ htmlcov/
 
 todo.org
 sample.md
+*.json
 
 *.egg-info/

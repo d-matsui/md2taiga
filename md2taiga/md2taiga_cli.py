@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 import sys
+from configparser import ConfigParser
 import re
 from taiga import TaigaAPI
 from collections import deque, defaultdict
-from configparser import ConfigParser
 
 
-def init_taiga_api(host, username, password):
+def setup_taiga_api(hostname, username, password):
     api = TaigaAPI(
-        host=host
+        host=hostname
     )
     api.auth(
         username=username,
@@ -28,120 +28,153 @@ def readfile_as_array(filename):
 
 
 def calc_min_level(lines):
-    min_count_hash = float('inf')
+    min_level = float('inf')
     for line in lines:
         if not line.startswith('#'):
             continue
-        count_hash = re.match(r'#+', line).end()
-        min_count_hash = min(min_count_hash, count_hash)
-    return min_count_hash
+        level = re.match(r'#+', line).end()
+        min_level = min(min_level, level)
+    return min_level
 
 
-def get_linums(lines, target_level):
-    linums = deque()
-    for linum, line in enumerate(lines):
+def get_line_numbers_by_level(lines, target_level):
+    line_numbers = deque()
+    for line_num, line in enumerate(lines):
         if not line.startswith('#'):
             continue
         level = re.match(r'#+', line).end()
         if level == target_level:
-            linums.append(linum)
-    return linums
+            line_numbers.append(line_num)
+    return line_numbers
 
 
-def calc_commit_line(lines):
-    for linum, line in enumerate(lines):
+def get_line_num_of_commit_line(lines):
+    for line_num, line in enumerate(lines):
         if re.match(r'--- commit line ---', line, re.IGNORECASE):
-            return linum
+            return line_num
     return len(lines)
 
 
-def get_milestone(project, milestone_name):
-    for milestone in project.list_milestones():
-        if milestone.name == milestone_name:
-            return milestone
+def find_milestone_by_name(project, milestone_name):
+    if milestone_name != '':
+        for milestone in project.list_milestones():
+            if milestone.name == milestone_name:
+                return milestone
     return None
 
 
 def create_us_list(text, project, status_name, tag_name, milestone_name):
     lines = text.splitlines()
-    level = calc_min_level(lines)
-    commit_line = calc_commit_line(lines)
-    status = project.us_statuses.get(name=status_name)
-    tags = {tag_name: project.list_tags()[tag_name]}
-    milestone = None
-    if milestone_name != '':
-        # Should handle error
-        milestone = get_milestone(project, milestone_name)
-    us_list = []
-    task_status = project.task_statuses.get(name='New')
-    point_dict = create_point_dict(project)
-    linums_us = get_linums(lines, level)
-    for idx, linum in enumerate(linums_us):
-        us = defaultdict()
-        us['title'] = lines[linum].strip('#').strip()
+    level_us = calc_min_level(lines)
+    level_task = level_us + 1
+    commit_line = get_line_num_of_commit_line(lines)
 
-        if us['title'].startswith('#'):
-            # the userstory already exists
-            us['exists'] = True
-            match_obj = re.match(r'#\d+', us['title'])
-            us['id'] = match_obj.group().strip('#')
-            # exclude us number from the title
-            us['title'] = us['title'][match_obj.end():].strip()
-        else:
-            us['exists'] = False
-        if milestone is not None and commit_line > linum:
-            us['milestone'] = milestone.id
-        else:
-            us['milestone'] = None
-        us['status_id'] = status.id
-        us['tags'] = tags
-        match_obj = re.search(r'\[\d+pt\]', us['title'])
-        if match_obj:
-            point_name = match_obj.group().strip('[pt]')
-            # exclude [Xpt] from the title
-            us['title'] = us['title'][:match_obj.start()].strip()
-        else:
-            point_name = '?'
-        # TODO: Should throw an error if there is no point specified
-        us['point'] = point_dict[point_name]
-        linum_next = linums_us[idx + 1] if not idx == len(linums_us) - 1 else -1
-        lines_descoped = lines[linum:linum_next]
-        us['task_list'] = create_task_list(lines_descoped, level + 1, task_status.id)
-        us_list.append(dict(us))
+    # TODO: Error handling
+    us_status = project.us_statuses.get(name=status_name)
+    tags = {tag_name: project.list_tags()[tag_name]}
+    milestone = find_milestone_by_name(project, milestone_name)
+    task_status = project.task_statuses.get(name='New')
+
+    point_dict = create_point_dict(project)
+    role_dict = create_role_dict(project)
+    line_numbers_us = get_line_numbers_by_level(lines, level_us)
+
+    us_list = []
+    for idx, line_num in enumerate(line_numbers_us):
+        line_num_next = line_numbers_us[idx + 1] if not idx == len(line_numbers_us) - 1 else -1
+        us = create_us(lines, line_num, line_num_next, milestone, us_status, tags, commit_line, task_status, point_dict, role_dict, level_task)
+        us_list.append(us)
     return us_list
+
+
+def create_us(lines, line_num, line_num_next, milestone, us_status, tags, commit_line, task_status, point_dict, role_dict, level_task):
+    us = defaultdict()
+
+    # Exclude '#' prefix from the us title
+    us['title'] = lines[line_num].strip('#').strip()
+    us['exists'] = exists_us(us['title'])
+
+    if milestone is not None and commit_line > line_num:
+        us['milestone_id'] = milestone.id
+    else:
+        us['milestone_id'] = None
+
+    us['status_id'] = us_status.id
+    us['tags'] = tags
+
+    match_obj = re.search(r'\[\d+pt\]', us['title'])
+    if match_obj:
+        point_name = match_obj.group().strip('[pt]')
+        # Exclude '[Xpt]' from the us title
+        us['title'] = us['title'][:match_obj.start()].strip()
+    else:
+        point_name = '?'
+    # TODO: Error handling when there is no specified point
+    us['point_id'] = point_dict[point_name]
+    role_name = next(iter(role_dict))
+    # uncomment next line if you want to Specify role
+    role_name = 'DevOps'
+    us['role_id'] = role_dict[role_name]
+
+    lines_clipped = lines[line_num:line_num_next]
+    us['task_list'] = create_task_list(lines_clipped, level_task, task_status.id)
+
+    return dict(us)
+
+
+def exists_us(title):
+    if title.startswith('#'):
+        return True
+    return False
+
+
+def extract_us_num(title):
+    match_obj = re.match(r'#\d+', title)
+    title_extracted = title[match_obj.end():].strip()
+    return title_extracted
+
+
+def get_us_id(title):
+    match_obj = re.match(r'#\d+', title)
+    us_id = match_obj.group().strip('#')
+    return us_id
 
 
 def create_task_list(lines, level, status_id):
     task_list = []
-    linums_task = get_linums(lines, level)
-    for idx, linum in enumerate(linums_task):
-        task = defaultdict()
-        task['title'] = lines[linum].strip('#').strip()
-        linum_next = linums_task[idx+1] if not idx == len(linums_task) - 1 else len(lines)
-        task['status_id'] = status_id
-        task['desc'] = '\n'.join(lines[linum + 1:linum_next])
-        task_list.append(dict(task))
+    line_nums_task = get_line_numbers_by_level(lines, level)
+    for idx, line_num in enumerate(line_nums_task):
+        line_num_next = line_nums_task[idx+1] if not idx == len(line_nums_task) - 1 else len(lines)
+        task = create_task(lines, line_num, line_num_next, status_id)
+        task_list.append(task)
     return task_list
+
+
+def create_task(lines, line_num, line_num_next, status_id):
+    task = defaultdict()
+    # Exclude '#' prefix from the task title
+    task['title'] = lines[line_num].strip('#').strip()
+    task['status_id'] = status_id
+    task['desc'] = '\n'.join(lines[line_num + 1:line_num_next])
+    return dict(task)
 
 
 def add_us_to_project(us_list, project):
     for us in us_list:
         if us['exists']:
-            # TODO: Should handle error
+            # TODO: Error handling
             us_obj = project.get_userstory_by_ref(us['id'])
             us_obj.subject = us['title']
             us_obj.status = us['status_id']
             us_obj.tags = us['tags']
-            if us['milestone'] is not None:
-                us_obj.milestone = us['milestone']
+            if us['milestone_id'] is not None:
+                us_obj.milestone = us['milestone_id']
         else:
-            if us['milestone'] is not None:
-                us_obj = project.add_user_story(us['title'], status=us['status_id'], tags=us['tags'], milestone=us['milestone'])
+            if us['milestone_id'] is not None:
+                us_obj = project.add_user_story(us['title'], status=us['status_id'], tags=us['tags'], milestone=us['milestone_id'])
             else:
                 us_obj = project.add_user_story(us['title'], status=us['status_id'], tags=us['tags'])
-        # FIXME: Should specify point to change
-        key = next(iter(us_obj.points))
-        us_obj.points[key] = us['point']
+        us_obj.points[us['role_id']] = us['point_id']
         us_obj.update()
 
         for task in us['task_list']:
@@ -156,7 +189,14 @@ def create_point_dict(project):
     point_dict = defaultdict()
     for point in project.list_points():
         point_dict[point.name] = point.id
-    return point_dict
+    return dict(point_dict)
+
+
+def create_role_dict(project):
+    role_dict = defaultdict()
+    for role in project.list_roles():
+        role_dict[role.name] = role.id
+    return dict(role_dict)
 
 
 def convert_text(us_list):
