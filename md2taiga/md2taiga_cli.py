@@ -94,6 +94,10 @@ def create_us(lines, line_num, line_num_next, milestone, us_status, tags, commit
     us['title'] = lines[line_num].strip('#').strip()
     us['exists'] = exists_us(us['title'])
 
+    if us['exists']:
+        us['id'] = get_us_id(us['title'])
+        us['title'] = extract_us_num(us['title'])
+
     if milestone is not None and commit_line > line_num:
         us['milestone_id'] = milestone.id
     else:
