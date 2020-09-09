@@ -1,2 +1,2 @@
 runtime: python37
-entrypoint: gunicorn -b :$PORT "md2taiga:create_app()"
+entrypoint: gunicorn -b :$PORT "md2taiga:create_app()" --timeout 300
