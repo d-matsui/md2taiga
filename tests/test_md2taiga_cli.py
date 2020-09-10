@@ -72,8 +72,8 @@ def test_get_line_num_of_commit_line():
 
 def test_create_task_list():
     task_list = [
-        {'title': 'Task1', 'status_id': 0, 'desc': '### Description\n#### TODO'},
-        {'title': 'Task2', 'status_id': 0, 'desc': '### Description\n#### TODO'}
+        {'title': 'Task1', 'status_id': 0, 'desc': '### Description\n#### TODO', 'id': None},
+        {'title': 'Task2', 'status_id': 0, 'desc': '### Description\n#### TODO', 'id': None}
     ]
     lines = [
         '# US',
@@ -84,8 +84,23 @@ def test_create_task_list():
         '### Description',
         '#### TODO'
     ]
-    assert md2taiga_cli.create_task_list(lines, 2, 0) == task_list
+    assert md2taiga_cli.create_task_list(lines, 2, 0, None) == task_list
 
+    # with task_id
+    task_list = [
+        {'title': 'Task1', 'status_id': 0, 'desc': '### Description\n#### TODO', 'id': '1'},
+        {'title': 'Task2', 'status_id': 0, 'desc': '### Description\n#### TODO', 'id': '2'}
+    ]
+    lines = [
+        '# #123 US',
+        '## #1 Task1',
+        '### Description',
+        '#### TODO',
+        '## #2 Task2',
+        '### Description',
+        '#### TODO'
+    ]
+    assert md2taiga_cli.create_task_list(lines, 2, 0, '123') == task_list
 
 def test_convert_text():
     us_list = [{'title': 'US1',

@@ -92,11 +92,12 @@ def create_us(lines, line_num, line_num_next, milestone, us_status, tags, commit
 
     # Exclude '#' prefix from the us title
     us['title'] = lines[line_num].strip('#').strip()
-    us['exists'] = exists_us(us['title'])
 
-    if us['exists']:
-        us['id'] = get_us_id(us['title'])
-        us['title'] = extract_us_num(us['title'])
+    if us['title'].startswith('#'):
+        us['id'] = get_id_prefix(us['title'])
+        us['title'] = extract_num_prefix(us['title'])
+    else:
+        us['id'] = None
 
     if milestone is not None and commit_line > line_num:
         us['milestone_id'] = milestone.id
@@ -121,51 +122,51 @@ def create_us(lines, line_num, line_num_next, milestone, us_status, tags, commit
     us['role_id'] = role_dict[role_name]
 
     lines_clipped = lines[line_num:line_num_next]
-    us['task_list'] = create_task_list(lines_clipped, level_task, task_status.id)
+    us['task_list'] = create_task_list(lines_clipped, level_task, task_status.id, us['id'])
 
     return dict(us)
 
 
-def exists_us(title):
-    if title.startswith('#'):
-        return True
-    return False
-
-
-def extract_us_num(title):
+def extract_num_prefix(title):
     match_obj = re.match(r'#\d+', title)
     title_extracted = title[match_obj.end():].strip()
     return title_extracted
 
 
-def get_us_id(title):
+def get_id_prefix(title):
     match_obj = re.match(r'#\d+', title)
-    us_id = match_obj.group().strip('#')
-    return us_id
+    id = match_obj.group().strip('#')
+    return id
 
 
-def create_task_list(lines, level, status_id):
+def create_task_list(lines, level, status_id, us_id):
     task_list = []
     line_nums_task = get_line_numbers_by_level(lines, level)
     for idx, line_num in enumerate(line_nums_task):
         line_num_next = line_nums_task[idx+1] if not idx == len(line_nums_task) - 1 else len(lines)
-        task = create_task(lines, line_num, line_num_next, status_id)
+        task = create_task(lines, line_num, line_num_next, status_id, us_id)
         task_list.append(task)
     return task_list
 
 
-def create_task(lines, line_num, line_num_next, status_id):
+def create_task(lines, line_num, line_num_next, status_id, us_id):
     task = defaultdict()
     # Exclude '#' prefix from the task title
     task['title'] = lines[line_num].strip('#').strip()
     task['status_id'] = status_id
     task['desc'] = '\n'.join(lines[line_num + 1:line_num_next])
+
+    if us_id is not None and task['title'].startswith('#'):
+        task['id'] = get_id_prefix(task['title'])
+        task['title'] = extract_num_prefix(task['title'])
+    else:
+        task['id'] = None
     return dict(task)
 
 
 def add_us_to_project(us_list, project):
     for us in us_list:
-        if us['exists']:
+        if us['id'] is not None:
             # TODO: Error handling
             us_obj = project.get_userstory_by_ref(us['id'])
             us_obj.subject = us['title']
@@ -182,11 +183,18 @@ def add_us_to_project(us_list, project):
         us_obj.update()
 
         for task in us['task_list']:
-            us_obj.add_task(
-                task['title'],
-                task['status_id'],
-                description=task['desc'],
-            )
+            if task['id'] is not None:
+                task_obj = project.get_task_by_ref(task['id'])
+                task_obj.subject = task['title']
+                task_obj.status = task['status_id']
+                task_obj.description = task['desc']
+                task_obj.update()
+            else:
+                us_obj.add_task(
+                    task['title'],
+                    task['status_id'],
+                    description=task['desc'],
+                )
 
 
 def create_point_dict(project):
