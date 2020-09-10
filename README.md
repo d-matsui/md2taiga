@@ -4,9 +4,7 @@ A web application for creating user stories on Taiga.io from markdown text
 
 ## Getting Started
 
-[Go to the md2taiga where I'm hosting.](https://md2taiga.dmti.net/)
-
-You can run this app in your local environment if you want.
+You can run this app in your local environment.
 
 ``` shell
 git clone git@github.com:d-matsui/md2taiga.git
@@ -15,7 +13,13 @@ python3 -m venv venv
 . venv/bin/activate
 pip install -r requirements.txt
 source ./export.sh
-flask run
+python3 -m flask run
+```
+
+## Test
+
+```shell
+python3 -m pytest -v
 ```
 
 ## Examples of markdown text
@@ -69,11 +73,11 @@ You can specify the user story point as follows.
 ##### Demo
 ```
 
-You can overwrite the existing user story by specifying the user story id.
+You can overwrite the existing user story and task by specifying their id.
 
 ``` markdown
-## #ID User Story Title [Xpt]
-### Subtask Title
+## #USID User Story Title [Xpt]
+### #TASKID Subtask Title
 #### Description of the subtask
 
 #### Definition of completion the subtask
